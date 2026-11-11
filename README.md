@@ -5,10 +5,9 @@ colorFrom: indigo
 colorTo: blue
 sdk: gradio
 sdk_version: 6.31.0
-python_version: '3.12'
+python_version: "3.12"
 app_file: app.py
 pinned: false
-license: mit
 ---
 
 # Tenantify AI — Recommendation & NLU Moderation Backend

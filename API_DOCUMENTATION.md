@@ -16,8 +16,10 @@ pip install -r requirements.txt
 python main.py
 ```
 
-* **Base URL:** `http://localhost:8000`
-* **Interactive Swagger UI:** [`http://localhost:8000/docs`](http://localhost:8000/docs) (bisa coba langsung via browser)
+* **Live Base URL (Production HF Space):** `https://s4usan-tenantify-models.hf.space`
+* **Live Interactive Swagger UI:** [`https://s4usan-tenantify-models.hf.space/docs`](https://s4usan-tenantify-models.hf.space/docs) (bisa langsung dicoba di browser)
+* **Local Development Base URL:** `http://localhost:8000`
+* **Local Swagger UI:** [`http://localhost:8000/docs`](http://localhost:8000/docs)
 * **CORS:** Sudah di-enable untuk semua origin (`*`), jadi aman dipanggil dari React / Next.js / Vue (port 3000, 5173, dll).
 
 ---

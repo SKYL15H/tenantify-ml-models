@@ -3,18 +3,19 @@ import os
 # Disable Gradio's Node SSR proxy so it does not bind port 7860 before Uvicorn starts.
 os.environ["GRADIO_SSR_MODE"] = "false"
 
+class _FallbackSpaces:
+    """No-op fallback when running outside Hugging Face ZeroGPU."""
+
+    @staticmethod
+    def GPU(fn=None, **_kwargs):
+        if fn is None:
+            return lambda func: func
+        return fn
+
+
 try:
     import spaces
 except ImportError:
-    class _FallbackSpaces:
-        """No-op fallback when running outside Hugging Face ZeroGPU."""
-
-        @staticmethod
-        def GPU(fn=None, **_kwargs):
-            if fn is None:
-                return lambda func: func
-            return fn
-
     spaces = _FallbackSpaces()
 
 import gradio as gr
@@ -220,23 +221,35 @@ def _run_semantic_search(query: str, top_n: int = 5, use_cuda: bool = False) -> 
     """Encode the query and rank matching or complementary products from FAISS."""
     if not products:
         return "Katalog produk kosong."
+    use_gpu_for_this_call = False
     if use_cuda:
         import torch
 
         if torch.cuda.is_available():
-            embedder.model.to("cuda")
+            try:
+                embedder.model.to("cuda")
+                use_gpu_for_this_call = True
+            except Exception:
+                use_gpu_for_this_call = False
 
-    limit = max(1, min(int(top_n), len(products)))
-    pairing_parts = _extract_pairing_parts(query)
-    if pairing_parts is not None:
-        anchor_text, specific_want, drink_only = pairing_parts
-        pairing_output = _run_pairing_recommendation(anchor_text, specific_want, drink_only, limit)
-        if pairing_output is not None:
-            return pairing_output
+    try:
+        limit = max(1, min(int(top_n), len(products)))
+        pairing_parts = _extract_pairing_parts(query)
+        if pairing_parts is not None:
+            anchor_text, specific_want, drink_only = pairing_parts
+            pairing_output = _run_pairing_recommendation(anchor_text, specific_want, drink_only, limit)
+            if pairing_output is not None:
+                return pairing_output
 
-    query_vec = embedder.encode([query])[0]
-    scores = embedder.get_similarities_from_vector(query_vec)
-    return _format_semantic_matches(scores, limit)
+        query_vec = embedder.encode([query])[0]
+        scores = embedder.get_similarities_from_vector(query_vec)
+        return _format_semantic_matches(scores, limit)
+    finally:
+        if use_gpu_for_this_call:
+            try:
+                embedder.model.to("cpu")
+            except Exception:
+                pass
 
 
 if USE_ZERO_GPU:

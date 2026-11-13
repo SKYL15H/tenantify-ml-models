@@ -72,6 +72,8 @@ _WANT_GENERIC_WORDS = _ANCHOR_FILLER_WORDS | {"makanan", "menu", "item", "produk
 
 def _is_zero_gpu_enabled() -> bool:
     """Return True only when Hugging Face ZeroGPU runtime is explicitly active."""
+    if hasattr(spaces, "GPU") and not isinstance(spaces, _FallbackSpaces):
+        return True
     config_mod = getattr(spaces, "config", None)
     config_cls = getattr(config_mod, "Config", None)
     if getattr(config_cls, "zero_gpu", False):
